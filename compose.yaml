@@ -1,0 +1,97 @@
+name: soimport
+
+x-app: &app
+  build:
+    context: .
+    target: app
+  image: soimport-app
+  restart: unless-stopped
+  environment:
+    APP_NAME: SOImport
+    APP_ENV: ${APP_ENV:-production}
+    APP_DEBUG: ${APP_DEBUG:-false}
+    APP_KEY: ${APP_KEY:-}
+    APP_URL: http://localhost:${APP_PORT:-8080}
+    LOG_CHANNEL: stderr
+    DB_CONNECTION: mysql
+    DB_HOST: db
+    DB_PORT: 3306
+    DB_DATABASE: ${DB_DATABASE:-soimport}
+    DB_USERNAME: ${DB_USERNAME:-soimport}
+    DB_PASSWORD: ${DB_PASSWORD:-secret}
+    SESSION_DRIVER: database
+    CACHE_STORE: database
+    QUEUE_CONNECTION: database
+    IMPORT_TIME_BUDGET: ${IMPORT_TIME_BUDGET:-20}
+    IMPORT_BATCH_SIZE: ${IMPORT_BATCH_SIZE:-1000}
+  volumes:
+    - app-storage:/var/www/html/storage/app
+  networks:
+    - soimport
+
+services:
+  app:
+    <<: *app
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/ready"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  queue:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "--timeout=30", "--sleep=1"]
+    depends_on:
+      app:
+        condition: service_healthy
+
+  tests:
+    image: soimport-app
+    pull_policy: never
+    profiles: ["test"]
+    entrypoint: ["php", "artisan", "test"]
+    network_mode: none
+
+  web:
+    build:
+      context: .
+      target: web
+    image: soimport-web
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - soimport
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-soimport}
+      MYSQL_USER: ${DB_USERNAME:-soimport}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    networks:
+      - soimport
+
+networks:
+  soimport:
+    name: soimport-network
+    driver: bridge
+
+volumes:
+  app-storage:
+  db-data:
