@@ -111,7 +111,7 @@ The assignment requires all rows to be written, so no row is ever dropped.
 
 ## Database structure
 
-Migrations are in `database/migrations`; a full SQL dump of the structure is in `database/structure.sql`.
+Migrations are in `database/migrations`; a full SQL dump of the structure is in `dump.sql` in the project root (a copy is kept in `database/structure.sql`).
 
 - `imports` — uploaded files: status, row counts, cursor, number of rows with issues, error text.
 - `leads` — the leads: the 15 columns of the file plus `import_id`, `source_row` (the row number in the sheet) and `issues`.
@@ -139,6 +139,7 @@ docker/                     entrypoint.sh, nginx.conf
 resources/js/               api.js, components/ImportPage.vue
 resources/views/            imports.blade.php
 tests/                      Unit, Feature, Support/XlsxFixture
+dump.sql                    SQL dump of the structure
 compose.yaml, Dockerfile
 ```
 

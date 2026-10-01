@@ -111,7 +111,7 @@ docker compose run --rm tests
 
 ## Структура БД
 
-Міграції лежать у `database/migrations`, повний SQL-дамп структури — у `database/structure.sql`.
+Міграції лежать у `database/migrations`, повний SQL-дамп структури — у `dump.sql` в корені проєкту (копія — у `database/structure.sql`).
 
 - `imports` — завантажені файли: статус, кількість рядків, курсор, кількість рядків із зауваженнями, текст помилки.
 - `leads` — заявки: 15 колонок файлу, а також `import_id`, `source_row` (номер рядка в аркуші) та `issues`.
@@ -139,6 +139,7 @@ docker/                     entrypoint.sh, nginx.conf
 resources/js/               api.js, components/ImportPage.vue
 resources/views/            imports.blade.php
 tests/                      Unit, Feature, Support/XlsxFixture
+dump.sql                    SQL-дамп структури
 compose.yaml, Dockerfile
 ```
 
